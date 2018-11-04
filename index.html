@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <style>
+      #map {
+        height: 100%;
+        position: relative;
+      }
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      .wrapper {
+        position: relative;
+        width: 100%;
+        height: 100%;
+      }
+      #input{
+        background-color: #ffffff;
+        border-radius: 50px;
+        box-shadow: 10px 5px 500px grey;
+        position: fixed;
+        left: 50%;
+        top: 40%;
+        width: 250px;
+        height: auto;
+        visibility: hidden;
+        z-index: 3;
+        margin-left: -100px;
+        margin-top: -100px;
+
+      }
+      #buttonDiv {
+        position: fixed;
+        top: 15%;
+        left: 1%;
+        z-index: 2;
+      }
+      #button {
+        background-color: #555555;
+        color: white;
+        font-size: 20px;
+        border-radius: 5px;
+        font-family: Trebuchet MS;
+        border: 3px solid #555555;
+        padding: 15px;
+      }
+      #resetButton {
+        background-color: #555555;
+        color: white;
+        font-size: 20px;
+        border-radius: 5px;
+        font-family: Trebuchet MS;
+        border: 3px solid #555555;
+        padding: 15px;
+        visibility: hidden;
+      }
+      #submit, #cancel{
+        background-color: white;
+        color: black;
+        border: 1px solid #555555;
+        font-size: 15px;
+        color: black;
+        margin-left: 15%;
+        margin-bottom: 10px;
+
+      }
+      #submit:hover, #cancel:hover{
+        background-color: #555555;
+        color: white;
+      }
+
+      #button:hover{
+        box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24),0 17px 50px 0 rgba(0, 0, 0, 0.19);
+      }
+
+      #crime_report{
+        font-family: Arial;
+        color: #535353;
+      }
+      #road, #houseNumber, #crimeDesc, #crimeType{
+        font-size: 15px;
+        outline: white;
+        margin-left: 12%;
+      }
+    </style>
+  </head>
+  <body onload="initialize()">
+    <div class="wrapper">
+      <div id="map"></div>
+      <div id="buttonDiv">
+        <div id="input">
+          <h2 id="crime_report" align="center">Crime Form</h2>
+          <input id="houseNumber" type="text" placeholder="House number . . ."/>
+          <br/><br/>
+          <input id="road" type="text" placeholder="Road name . . .">
+          <br/><br/>
+          <input id="crimeType" type="text" placeholder="Crime Type . . ."/>
+          <br/><br/>
+          <input id="crimeDesc" type="text" placeholder="Description/time . . ."/>
+          <br/><br/>
+          <button class="button" id="submit" type="button" onClick="submit()">Submit</button>
+          <button class="button" id="cancel" type="button" onClick="cancel()">Cancel</button>
+        </div>
+        <button id="button" type="button" onclick="buttonClick()">Add Crime</button><br/><br/>
+        <button id="resetButton" type="button" onclick="resetZoom()">Reset</button>
+      </div>
+    </div>
+    <script>
+      var map;
+      var geocoder;
+      function initialize() {
+        geocoder = new google.maps.Geocoder();
+        var latlng = new google.maps.LatLng(52.4408809, -1.9385408);
+        var mapOptions = {
+          zoom: 15,
+          minZoom: 15,
+          center: latlng,
+          draggable: false
+        }
+        map = new google.maps.Map(document.getElementById('map'), mapOptions);
+      }
+      function codeAddress() {
+        inputs = getInputs();
+        var address = inputs[0] + inputs[1];
+        geocoder.geocode({'address': address/*, 'componentRestrictions': {country: 'GB', postalCode: 'B29'}*/}, function(results, status) {
+          if (status == 'OK') {
+            map.setCenter(results[0].geometry.location);
+            var marker = new google.maps.Marker({
+              map: map,
+              position: results[0].geometry.location,
+              title: inputs[2]
+            });
+            var infowindow = new google.maps.InfoWindow({
+          		content: inputs[2] + "<br/><br/>" + inputs[3]
+          	});
+            marker.addListener('click', function(){
+          		infowindow.open(map, marker);
+          	});
+          	marker.setMap(map)
+          } else {
+            alert('Geocode was not successful for the following reason: ' + status);
+          }
+        });
+        document.getElementById("resetButton").style.visibility = "visible";
+      }
+      function buttonClick() {
+        document.getElementById("map").style.opacity = 0.5;
+        document.getElementById("input").style.visibility = "visible";
+      }
+      function getInputs(){
+        var getRoad = document.getElementById("road").value;
+        var getNo = document.getElementById("houseNumber").value;
+        var getType = document.getElementById("crimeType").value;
+        var getDesc = document.getElementById("crimeDesc").value;
+        var getInfo = [getNo, getRoad, getType, getDesc];
+        document.getElementById("road").value = "";
+        document.getElementById("houseNumber").value = "";
+        document.getElementById("crimeType").value = "";
+        document.getElementById("crimeDesc").value = "";
+        return getInfo;
+      }
+      function cancel(){
+        document.getElementById("map").style.opacity = 1;
+        document.getElementById("input").style.visibility = "hidden";
+      }
+      function submit() {
+        //inputs = getInputs();
+        document.getElementById("map").style.opacity = 1;
+        /*var raw_address = inputs[1].split(" ");
+        var address = inputs[0];
+        for (var i = 0; i < raw_address.length; i++) {
+          address += "+" + raw_address[i];
+        }
+        address = inputs[0] + inputs[1];
+        console.log(address);*/
+        codeAddress();
+        document.getElementById("input").style.visibility = "hidden";
+      }
+      function resetZoom() {
+        map.setCenter(new google.maps.LatLng(52.4408809, -1.9385408));
+        map.setZoom(15);
+        document.getElementById("resetButton").style.visibility = "hidden";
+      }
+    </script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCTZ9GAPF1dxFa8S8wC6J-EFnOdSARz_rI&callback=initialize" async defer></script>
+  </body>
+</html>
